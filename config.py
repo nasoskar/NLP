@@ -1,0 +1,7 @@
+################# LSTM ##################
+MAX_LEN = 30
+BATCH_SIZE = 16
+HIDDEN_SIZE = 128
+EPOCHS = 50
+PATIENCE = 7
+LOSS_FUNCTION = 'ADAM'
