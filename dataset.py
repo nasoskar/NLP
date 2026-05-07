@@ -72,8 +72,8 @@ class FinBertDataset():
 
 class LSTMClassification(Dataset):
     def __init__(self, X_train, y_train, vocab):
-        self.data = X_train
-        self.labels = y_train
+        self.data = X_train.reset_index(drop=True)
+        self.labels = y_train.reset_index(drop=True)
         self.vocab = vocab
 
     def __len__(self):
@@ -88,5 +88,8 @@ class LSTMClassification(Dataset):
         elif len(ids) < MAX_LEN:
             ids += [0] * (MAX_LEN - len(ids))
 
-        return torch.tensor(ids, dtype=torch.long), torch.tensor(self.labels[idx], dtype=torch.long)
+        return {
+            "input_ids": torch.tensor(ids, dtype=torch.long),
+            "label": torch.tensor(self.labels[idx], dtype=torch.long)
+        }
         

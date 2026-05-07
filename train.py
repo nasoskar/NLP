@@ -24,11 +24,11 @@ def load_glove(glove_path, vocab, embedding_dim=100):
     
     return torch.tensor(embedding_matrix, dtype=torch.float)
 
-def LSTM_train(model, optimizer, criterion):
+def LSTM_train(model, optimizer, criterion, train_dataloader, val_dataloader):
     best_val_loss = float('inf')
     patience_counter = 0 #used for early stopping
     min_delta = 0.005 # Minimum change in loss to qualify as an improvement
-    
+    best_val_f1 = 0
 
     for epoch in range(EPOCHS):
         model.train()
@@ -71,6 +71,9 @@ def LSTM_train(model, optimizer, criterion):
 
         val_f1 = f1_score(all_labels, all_preds, average="macro")
 
+        if val_f1 > best_val_f1:
+            best_val_f1 = val_f1
+
         if val_loss < best_val_loss - min_delta:
             patience_counter = 0
             best_val_loss = val_loss
@@ -83,47 +86,6 @@ def LSTM_train(model, optimizer, criterion):
 
         print(f"Epoch {epoch+1}/{EPOCHS} | Train Loss: {running_loss/len(train_dataloader):.4f} | Val Loss: {val_loss/len(val_dataloader):.4f} | Val Macro F1: {val_f1:.4f}")
 
-if __name__ == "__main__":
-
-    #---PROCESS---
-    #Step 1: create dataframe based on the image paths
-    df = create_dataframe()
-    df['text'] = df['text'].apply(clean_text)
-    print(df)
-
-    #Step 2: Split the dataset
-    X_train, y_train, X_val, y_val, X_test, y_test = split_dataset(df)
-
-    #Step 3: SVM with TF-IDF
-    svmclass = SVM_Classifier()
-    svmclass.fit(X_train, y_train)
-    y_pred = svmclass.predict(X_test)
-
-
-    vocab = build_vocab(X_train)
-
-    train_dataset = LSTMClassification(X_train, y_train, vocab)
-    val_dataset   = LSTMClassification(X_val,   y_val,   vocab)  
-    test_dataset  = LSTMClassification(X_test,  y_test,  vocab)  
-
-    #Step 4:  Call DataLoader
-    train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, pin_memory=True)
-
-    batch = next(iter(train_dataloader))
-    input_ids = batch["input_ids"]  # shape: (32, 30)
-    labels    = batch["label"]      # shape: (32,)
-
-    # Step 5: Call LSTM model
-    glove_matrix = load_glove("glove.6B.100d.txt", vocab)
-    weights = compute_class_weight("balanced", classes=np.array([0,1,2]), y=y_train)
-    class_weights = torch.tensor(weights, dtype=torch.float)
-    model = LSTM(len(vocab), 100, HIDDEN_SIZE, 3).to(device)
-    model.embedding.weight.data.copy_(glove_matrix)
-    model.embedding.weight.requires_grad = True
-    
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    criterion = nn.CrossEntropyLoss(weight=class_weights.to(device))
-    LSTM_train(model, optimizer, criterion)
+    return best_val_f1
 
 
