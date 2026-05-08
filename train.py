@@ -88,4 +88,62 @@ def LSTM_train(model, optimizer, criterion, train_dataloader, val_dataloader):
 
     return best_val_f1
 
+def finbert_train(model, optimizer, criterion, train_dataloader, val_dataloader):
+    best_val_loss = float('inf')
+    best_val_f1 = 0
+    patience_counter = 0
+    min_delta = 0.005
+
+    for epoch in range(EPOCHS):
+        model.train()
+        running_loss = 0.
+
+        for data in train_dataloader:
+            input_ids = data["input_ids"].to(device)
+            attention_mask = data["attention_mask"].to(device)
+            labels = data["label"].to(device)
+
+            optimizer.zero_grad()
+            output = model(input_ids, attention_mask)
+            loss = criterion(output, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+
+        model.eval()
+        val_loss = 0.
+        all_preds = []
+        all_labels= []
+
+        with torch.no_grad():
+            for data in val_dataloader:
+                input_ids = data["input_ids"].to(device)
+                attention_mask = data["attention_mask"].to(device)
+                labels = data["label"].to(device)
+
+                output = model(input_ids, attention_mask)
+                loss = criterion(output, labels)
+                val_loss += loss.item()
+
+                preds = torch.argmax(output, dim=1)
+                all_preds.extend(preds.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
+
+        val_f1 = f1_score(all_labels, all_preds, average="macro")
+
+        if val_loss < best_val_loss - min_delta:
+            patience_counter = 0
+            best_val_loss =  val_loss
+            best_val_f1 = val_f1
+            torch.save(model.state_dict(), "checkpoints/best_finbert.pth")
+        else:
+            patience_counter += 1
+            if patience_counter >= PATIENCE:
+                print(f"Early stopping at epoch {epoch+1}")
+                break
+
+        print(f"Epoch {epoch+1}/{EPOCHS} | Train Loss: {running_loss/len(train_dataloader):.4f} | Val Loss: {val_loss/len(val_dataloader):.4f} | Val Macro F1: {val_f1:.4f}")
+
+    return best_val_f1
+
 

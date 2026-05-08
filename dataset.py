@@ -2,6 +2,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
 import pandas as pd
 import re
+from transformers import AutoTokenizer
 from config import *
 import torch
 
@@ -60,15 +61,30 @@ def build_vocab(texts, min_freq=1):
     return vocab
     
 
-class FinBertDataset():
-    def __init__(self):
-        pass
+class FinBertDataset(Dataset):
+    def __init__(self, X_train, y_train):
+        self.data = X_train.reset_index(drop=True)
+        self.labels = y_train.reset_index(drop=True)
+        self.tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
 
     def __len__(self):
-        pass
+        return len(self.data)
 
     def __getitem__(self, idx):
-        pass
+
+        encoding = self.tokenizer(
+            self.data[idx],
+            max_length=128,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt"
+        )
+
+        return {
+            "input_ids": encoding['input_ids'].squeeze(0),
+            "attention_mask": encoding['attention_mask'].squeeze(0),
+            "label": torch.tensor(self.labels[idx], dtype=torch.long)
+        }
 
 class LSTMClassification(Dataset):
     def __init__(self, X_train, y_train, vocab):
