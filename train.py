@@ -101,6 +101,10 @@ def finbert_train(model, optimizer, criterion, train_dataloader, val_dataloader)
     patience_counter = 0
     min_delta = 0.005
 
+    train_losses = []
+    val_losses = []
+    val_f1s = []
+
     for epoch in range(EPOCHS):
         model.train()
         running_loss = 0.
@@ -117,6 +121,7 @@ def finbert_train(model, optimizer, criterion, train_dataloader, val_dataloader)
             optimizer.step()
             running_loss += loss.item()
 
+        train_losses.append(running_loss / len(train_dataloader))
         model.eval()
         val_loss = 0.
         all_preds = []
@@ -136,7 +141,9 @@ def finbert_train(model, optimizer, criterion, train_dataloader, val_dataloader)
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(labels.cpu().numpy())
 
+        val_losses.append(val_loss / len(val_dataloader))
         val_f1 = f1_score(all_labels, all_preds, average="macro")
+        val_f1s.append(val_f1)
 
         if val_loss < best_val_loss - min_delta:
             patience_counter = 0
@@ -151,6 +158,6 @@ def finbert_train(model, optimizer, criterion, train_dataloader, val_dataloader)
 
         print(f"Epoch {epoch+1}/{EPOCHS} | Train Loss: {running_loss/len(train_dataloader):.4f} | Val Loss: {val_loss/len(val_dataloader):.4f} | Val Macro F1: {val_f1:.4f}")
 
-    return best_val_f1
+    return best_val_f1, train_losses, val_losses, val_f1s
 
 
