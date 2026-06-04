@@ -29,6 +29,13 @@ All models are evaluated overall and stratified by sentence length (short ≤12 
 | LSTM + GloVe | 0.782 | 0.729 |
 | **FinBERT** | **0.843** | **0.872** |
 
+| Model | Short (≤12) | Long (>12) |
+|-------|-------------|------------|
+| SVM + TF-IDF | 0.790 | 0.741 |
+| LSTM + GloVe | 0.743 | 0.714 |
+| **FinBERT** | **0.812** | **0.828** |
+
+
 **Main finding:** FinBERT's advantage over SVM grows from 0.022 on short texts to 0.087 on long texts, confirming that contextual representations become more valuable as text length increases. Surprisingly, SVM outperforms LSTM on all metrics. For short texts under computational constraints, SVM with TF-IDF emerges as the most practical choice — FinBERT's advantage diminishes significantly while SVM trains in minutes on CPU compared to FinBERT's 2+ hours on GPU, making it the best trade-off between performance and efficiency for real-time applications such as financial tweet analysis.
 
 ---
@@ -105,7 +112,7 @@ NLP/
 
 ```bash
 # Clone the repo
-git clone https://github.com/nasos-karas/financial-sentiment-length-study
+git clone [link]
 cd financial-sentiment-length-study
 
 # Create and activate virtual environment
@@ -122,41 +129,7 @@ jupyter notebook main.ipynb
 
 ---
 
-## Running Inference on Test Set
 
-Use `inference.ipynb` to load the two best trained models (SVM and FinBERT) and evaluate on the test set.
-
-**The test set and model checkpoints are available at:**  
-🔗 [Google Drive — Shared Folder](INSERT_YOUR_SHARED_DRIVE_LINK_HERE)
-
-### Steps
-
-1. Download `test.csv` and `checkpoints/` from the Drive link above
-2. Upload to your Google Drive at `/MyDrive/NLP/`
-3. Open `inference.ipynb` in Colab
-4. Run all cells
-
-### Expected Output
-
-```
-SVM — Test Results
-Accuracy:  0.834 | Macro F1:  0.749
-
-FinBERT — Test Results  
-Accuracy:  0.843 | Macro F1:  0.872
-```
-
----
-
-## Model Details
-
-### SVM + TF-IDF
-
-```python
-TfidfVectorizer(max_features=10000, ngram_range=(1,2), sublinear_tf=True)
-SVC(kernel='rbf', C=1.0, class_weight='balanced')
-# Selected via 5-fold GridSearchCV optimising macro F1
-```
 
 ## Preprocessing
 
