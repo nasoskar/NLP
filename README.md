@@ -29,7 +29,7 @@ All models are evaluated overall and stratified by sentence length (short ≤12 
 | LSTM + GloVe | 0.782 | 0.729 |
 | **FinBERT** | **0.843** | **0.872** |
 
-| Model | Short (≤12) | Long (>12) |
+| Model | Short (≤12) (Macro F1) | Long (>12) (Macro F1) |
 |-------|-------------|------------|
 | SVM + TF-IDF | 0.790 | 0.741 |
 | LSTM + GloVe | 0.743 | 0.714 |
