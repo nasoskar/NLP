@@ -38,7 +38,7 @@ All models are evaluated overall and stratified by sentence length (short ≤12 
 | Dataset | Samples | Source |
 |---------|---------|--------|
 | Twitter Financial News Sentiment | 11,932 | [HuggingFace](https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment) |
-| Financial PhraseBank (75% agree) | 3,453 | Local `.txt` file |
+| Financial PhraseBank (75% agree) | 3,453 | [HuggingFace](https://huggingface.co/datasets/takala/financial_phrasebank) |
 | **Combined** | **15,385** | Merged and split 80/10/10 |
 
 ---
