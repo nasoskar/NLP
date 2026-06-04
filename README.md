@@ -1,27 +1,188 @@
+# Does Context Always Help?
+### A Length-Stratified Comparison of SVM, LSTM, and FinBERT for Financial Sentiment Classification
 
-Financial Sentiment Analysis —  README file
-Author: Nasos Karas | 250044150 | MSc Artificial Intelligence
-Course: Natural Language Processing
+**Author:** Nasos Karas | 250044150  
+**Course:** MSc Artificial Intelligence — Natural Language Processing  
+**Institution:** City, University of London  
 
+---
 
-### PACKAGE CONTENTS
+## Overview
 
+This project investigates whether contextual representation models consistently outperform non-contextual models in financial sentiment analysis, and whether this advantage varies by sentence length. Three models of increasing contextual sophistication are compared:
 
-    inference.ipynb         - Main notebook to run inference on test set using two best trained models
-    main.ipynb              - The main notebook to run all models, generate plots and execute the workflow end-to-end
-    config.py               - Hyperparameters and constants
-    dataset.py              - Data loading and preprocessing
-    svm.py                  - SVM model class
-    finbert.py              - FinBERT model class
-    requirements.txt        - Required Python libraries
-    README.md               - This file
-    lstm.py                 - LSTM model class
-    test.csv                - A csv file that contains only the test set of the dataset
-    train.py                - Loads GloVe word embeddings and calls the functions that train LSTM and FinBERT
+| Model | Type | Description |
+|-------|------|-------------|
+| SVM + TF-IDF | Non-contextual baseline | Bag-of-words with unigrams and bigrams |
+| LSTM + GloVe | Sequential neural | GloVe 100d embeddings, left-to-right processing |
+| FinBERT | Contextual transformer | Pretrained on financial corpora, bidirectional attention |
 
-    checkpoints/
-        best_svm.pkl        - Saved SVM model (vectorizer + classifier)
-        best_finbert.pth    - Saved FinBERT weights
+All models are evaluated overall and stratified by sentence length (short ≤12 words, long >12 words).
+
+---
+
+## Key Results
+
+| Model | Accuracy | Macro F1 |
+|-------|----------|----------|
+| SVM + TF-IDF | 0.834 | 0.749 |
+| LSTM + GloVe | 0.782 | 0.729 |
+| **FinBERT** | **0.843** | **0.872** |
+
+**Main finding:** FinBERT's advantage over SVM grows from 0.022 on short texts to 0.087 on long texts, confirming that contextual representations become more valuable as text length increases. Surprisingly, SVM outperforms LSTM on all metrics. For short texts under computational constraints, SVM with TF-IDF emerges as the most practical choice — FinBERT's advantage diminishes significantly while SVM trains in minutes on CPU compared to FinBERT's 2+ hours on GPU, making it the best trade-off between performance and efficiency for real-time applications such as financial tweet analysis.
+
+---
+
+## Datasets
+
+| Dataset | Samples | Source |
+|---------|---------|--------|
+| Twitter Financial News Sentiment | 11,932 | [HuggingFace](https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment) |
+| Financial PhraseBank (75% agree) | 3,453 | Local `.txt` file |
+| **Combined** | **15,385** | Merged and split 80/10/10 |
+
+---
+
+## Project Structure
+
+```
+financial-sentiment-length-study/
+├── config.py               # Hyperparameters and constants
+├── dataset.py              # Data loading, preprocessing, Dataset classes
+├── svm.py                  # SVM + TF-IDF classifier
+├── lstm.py                 # LSTM nn.Module definition
+├── finbert.py              # FinBERT + classification head
+├── train.py                # Training loops (LSTM, FinBERT) + GloVe loader
+├── evaluate.py             # Evaluation metrics and plots
+├── main.ipynb              # Full training and evaluation pipeline
+├── inference.ipynb         # Load best models and run on test set
+├── requirements.txt        # Python dependencies
+└── README.md               # This file
+```
+
+---
+
+## Setup
+
+### Requirements
+
+- Python 3.12
+- Google Colab (recommended, T4 GPU) or local machine
+- GloVe embeddings: [glove.6B.zip](https://nlp.stanford.edu/data/glove.6B.zip) — extract `glove.6B.100d.txt`
+- Financial PhraseBank: download `Sentences_75Agree.txt` from [here](https://huggingface.co/datasets/takala/financial_phrasebank)
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Required Files (place in Google Drive at `/MyDrive/NLP/`)
+
+```
+NLP/
+├── glove.6B.100d.txt
+├── FinancialPhraseBank-v1.0/
+│   └── Sentences_75Agree.txt
+└── checkpoints/
+    ├── best_svm.pkl
+    └── best_finbert.pth
+```
+
+---
+
+## Running the Project
+
+### Option A — Google Colab (Recommended)
+
+1. Open `main.ipynb` in Google Colab
+2. Set runtime to **T4 GPU**: `Runtime → Change runtime type → T4 GPU`
+3. Run Cell 1 to mount Google Drive
+4. Run Cell 2 to clone the repo and install dependencies
+5. Run all cells top to bottom
+
+### Option B — Local Machine
+
+```bash
+# Clone the repo
+git clone https://github.com/nasos-karas/financial-sentiment-length-study
+cd financial-sentiment-length-study
+
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Mac/Linux
+.venv\Scripts\activate           # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run notebook
+jupyter notebook main.ipynb
+```
+
+---
+
+## Running Inference on Test Set
+
+Use `inference.ipynb` to load the two best trained models (SVM and FinBERT) and evaluate on the test set.
+
+**The test set and model checkpoints are available at:**  
+🔗 [Google Drive — Shared Folder](INSERT_YOUR_SHARED_DRIVE_LINK_HERE)
+
+### Steps
+
+1. Download `test.csv` and `checkpoints/` from the Drive link above
+2. Upload to your Google Drive at `/MyDrive/NLP/`
+3. Open `inference.ipynb` in Colab
+4. Run all cells
+
+### Expected Output
+
+```
+SVM — Test Results
+Accuracy:  0.834 | Macro F1:  0.749
+
+FinBERT — Test Results  
+Accuracy:  0.843 | Macro F1:  0.872
+```
+
+---
+
+## Model Details
+
+### SVM + TF-IDF
+
+```python
+TfidfVectorizer(max_features=10000, ngram_range=(1,2), sublinear_tf=True)
+SVC(kernel='rbf', C=1.0, class_weight='balanced')
+# Selected via 5-fold GridSearchCV optimising macro F1
+```
+
+## Preprocessing
+
+All models use the same preprocessing pipeline:
+
+Length buckets:
+- **Short:** ≤ 12 words
+- **Long:** > 12 words
+
+Class imbalance handled via `class_weight='balanced'` (SVM) and `CrossEntropyLoss(weight=class_weights)` (LSTM, FinBERT).
+
+---
+
+## Libraries
+
+| Library | Version | Purpose |
+|---------|---------|---------|
+| `torch` | 2.3.0 | LSTM and FinBERT training |
+| `transformers` | 4.40.0 | FinBERT model and tokenizer |
+| `scikit-learn` | 1.4.2 | SVM, TF-IDF, GridSearchCV, metrics |
+| `pandas` | 2.2.2 | Data loading and preprocessing |
+| `numpy` | 1.26.4 | Numerical operations |
+| `matplotlib` | 3.9.0 | Plots and visualisations |
+| `seaborn` | 0.13.2 | Heatmaps |
+| `datasets` | 2.20.0 | Loading Twitter dataset |
+
 
 
 ### TEST SET
@@ -40,10 +201,6 @@ Alternatively the full dataset can be obtained from:
     - Financial PhraseBank:
       https://huggingface.co/datasets/takala/financial_phrasebank
 
-
-### REQUIREMENTS
-
-To run all necessary files, execute pip install -r requirements.txt, to install all necessary dependencies
 
 ### HOW TO RUN IN GOOGLE COLAB 
 
