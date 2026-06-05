@@ -36,7 +36,7 @@ All models are evaluated overall and stratified by sentence length (short ≤12 
 | **FinBERT** | **0.812** | **0.828** |
 
 
-**Main finding:** FinBERT's advantage over SVM grows from 0.022 on short texts to 0.087 on long texts, confirming that contextual representations become more valuable as text length increases. Surprisingly, SVM outperforms LSTM on all metrics. For short texts under computational constraints, SVM with TF-IDF emerges as the most practical choice — FinBERT's advantage diminishes significantly while SVM trains in minutes on CPU compared to FinBERT's 2+ hours on GPU, making it the best trade-off between performance and efficiency for real-time applications such as financial tweet analysis.
+**Main finding:** FinBERT's advantage over SVM grows from 0.022 on short texts to 0.087 on long texts, confirming that contextual representations become more valuable as text length increases. Surprisingly, SVM outperforms LSTM on all metrics. For short texts under computational constraints, SVM with TF-IDF emerges as the most practical choice; FinBERT's advantage diminishes significantly while SVM trains in minutes on CPU compared to FinBERT's 2+ hours on GPU, making it the best trade-off between performance and efficiency for real-time applications such as financial tweet analysis.
 
 ---
 
@@ -64,7 +64,6 @@ financial-sentiment-length-study/
 ├── main.ipynb              # Full training and evaluation pipeline
 ├── inference.ipynb         # Load best models and run on test set
 ├── requirements.txt        # Python dependencies
-└── README.md               # This file
 ```
 
 ---
@@ -158,24 +157,7 @@ Class imbalance handled via `class_weight='balanced'` (SVM) and `CrossEntropyLos
 
 
 
-### TEST SET
-
-The test set (test.csv) is available at the following shared Google Drive link:
-
-    https://drive.google.com/file/d/19aya_AmttLWbX9fCOKjNkYW0wV73sfeI/view?usp=drive_link
-
-
-Download test.csv and upload it to your Google Drive at:
-    /content/drive/MyDrive/NLP/test.csv
-
-Alternatively the full dataset can be obtained from:
-    - Twitter Financial News Sentiment:
-      https://huggingface.co/datasets/zeroshot/twitter-financial-news-sentiment
-    - Financial PhraseBank:
-      https://huggingface.co/datasets/takala/financial_phrasebank
-
-
-### HOW TO RUN IN GOOGLE COLAB 
+### How to run in Google Colab 
 
 STEP 1: Open Google Colab
     - Go to https://colab.research.google.com
@@ -207,12 +189,5 @@ STEP 6: Run All Cells
         4. Display confusion matrices for both models
         5. Print final comparison table
 
-### NOTES
 
-- GloVe embeddings are only required for LSTM (not included in this package
-  as the two best models are SVM and FinBERT)
-- If running on CPU, FinBERT inference may take 5-10 minutes
-- If running on T4 GPU, FinBERT inference takes under 1 minute
-- The Drive mount cell will always ask for authentication with your own
-  Google account
 
